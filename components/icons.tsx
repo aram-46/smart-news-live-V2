@@ -1,3 +1,5 @@
+
+
 import React from 'react';
 
 export const SearchIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -250,7 +252,6 @@ export const CameraIcon: React.FC<React.SVGProps<SVGSVGElement>> = props => (
         <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
     </svg>
 );
-
 
 export const LockClosedIcon: React.FC<React.SVGProps<SVGSVGElement>> = props => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>

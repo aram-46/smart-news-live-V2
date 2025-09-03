@@ -6,7 +6,7 @@ interface ExportButtonProps {
   elementRef: React.RefObject<HTMLElement>;
   data: any;
   title: string;
-  type: 'news' | 'web' | 'structured' | 'agent' | 'general_topic';
+  type: 'news' | 'web' | 'structured' | 'agent' | 'general_topic' | 'fact-check';
   disabled: boolean;
 }
 

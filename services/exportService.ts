@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { NewsArticle, WebResult, StatisticsResult, ScientificArticleResult, AgentExecutionResult, GeneralTopicResult } from '../types';
+import { NewsArticle, WebResult, StatisticsResult, ScientificArticleResult, AgentExecutionResult, GeneralTopicResult, FactCheckResult } from '../types';
 
 // Helper to sanitize text for HTML
 const escapeHtml = (unsafe: string | undefined | null) => {
@@ -77,6 +77,43 @@ const generateStructuredHtml = (data: StatisticsResult | ScientificArticleResult
     return html;
 };
 
+const generateFactCheckHtml = (data: FactCheckResult): string => {
+    let html = `<div class="card">`;
+    html += `<h2>نتیجه کلی: ${escapeHtml(String(data.overallCredibility))}</h2>`;
+    html += `<p>${escapeHtml(data.summary)}</p>`;
+
+    // Original Source
+    const os = data.originalSource;
+    html += `<div class="structured-section"><h3>ردیابی و بررسی منبع اولیه</h3>
+        <p><strong>منبع:</strong> <a href="${escapeHtml(os.link)}" target="_blank">${escapeHtml(os.name)}</a></p>
+        <p><strong>تاریخ انتشار:</strong> ${escapeHtml(os.publicationDate)}</p>
+        <p><strong>منتشر کننده:</strong> ${escapeHtml(os.author)}</p>
+        <p><strong>نوع مدرک:</strong> ${escapeHtml(os.evidenceType)}</p>
+        <p><strong>اعتبار منبع:</strong> ${escapeHtml(os.credibility)}</p>
+        <p><strong>اعتبار مدرک:</strong> ${escapeHtml(os.evidenceCredibility)}</p>
+        <p><strong>اعتبار منتشر کننده:</strong> ${escapeHtml(os.authorCredibility)}</p>
+    </div>`;
+
+    // Proponents and Opponents
+    html += `<div class="structured-section"><h3>میزان پذیرش و استدلال‌ها</h3>
+        <p><strong>میزان پذیرش ادعا:</strong> ${data.acceptancePercentage}%</p>
+        <h4>موافقین</h4><ul>${data.proponents.map(p => `<li><strong>${escapeHtml(p.name)}:</strong> ${escapeHtml(p.argument)}</li>`).join('') || '<li>موردی یافت نشد.</li>'}</ul>
+        <h4>مخالفین</h4><ul>${data.opponents.map(o => `<li><strong>${escapeHtml(o.name)}:</strong> ${escapeHtml(o.argument)}</li>`).join('') || '<li>موردی یافت نشد.</li>'}</ul>
+    </div>`;
+    
+    // Related Sources
+    if (data.relatedSources && data.relatedSources.length > 0) {
+        html += `<div class="structured-section"><h3>منابع مرتبط</h3><ul>`;
+        data.relatedSources.forEach(source => {
+            html += `<li><a href="${escapeHtml(source.url)}" target="_blank">${escapeHtml(source.title)}</a></li>`;
+        });
+        html += `</ul></div>`;
+    }
+    
+    html += `</div>`;
+    return html;
+};
+
 const generateAgentHtml = (data: AgentExecutionResult): string => {
     let html = `<div class="card">`;
     html += `<h2>خلاصه نتایج</h2><p>${escapeHtml(data.summary)}</p>`;
@@ -127,7 +164,7 @@ const generateGeneralTopicHtml = (data: GeneralTopicResult): string => {
     return html;
 };
 
-export const generateHtmlContent = (data: any, title: string, type: 'news' | 'web' | 'structured' | 'agent' | 'general_topic'): string => {
+export const generateHtmlContent = (data: any, title: string, type: 'news' | 'web' | 'structured' | 'agent' | 'general_topic' | 'fact-check'): string => {
     let contentHtml = '';
     if (!data || (Array.isArray(data) && data.length === 0)) {
         contentHtml = '<p>No data to display.</p>';
@@ -141,6 +178,8 @@ export const generateHtmlContent = (data: any, title: string, type: 'news' | 'we
         contentHtml = generateAgentHtml(data as AgentExecutionResult);
     } else if (type === 'general_topic') {
         contentHtml = generateGeneralTopicHtml(data as GeneralTopicResult);
+    } else if (type === 'fact-check') {
+        contentHtml = generateFactCheckHtml(data as FactCheckResult);
     }
     
     return `

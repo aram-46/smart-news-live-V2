@@ -1,8 +1,12 @@
 
+
 import React, { useState, useCallback, useRef } from 'react';
 import { FactCheckResult, Credibility, AppSettings, MediaFile } from '../types';
-import { CheckCircleIcon, LinkIcon, UploadIcon, ImageIcon, AudioIcon, VideoIcon, UserIcon, CalendarIcon, DocumentTextIcon, ThumbsUpIcon, ThumbsDownIcon, LightBulbIcon } from './icons';
+import { CheckCircleIcon, LinkIcon, UploadIcon, UserIcon, CalendarIcon, DocumentTextIcon, ThumbsUpIcon, ThumbsDownIcon, LightBulbIcon, CameraIcon } from './icons';
 import { factCheckNews } from '../services/geminiService';
+import ExportButton from './ExportButton';
+import ScreenshotModal from './ScreenshotModal';
+import html2canvas from 'html2canvas';
 
 interface FactCheckProps {
   settings: AppSettings;
@@ -38,6 +42,8 @@ const FactCheck: React.FC<FactCheckProps> = ({ settings, onOpenUrl }) => {
   const [result, setResult] = useState<FactCheckResult | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
+  const [screenshotImage, setScreenshotImage] = useState<string | null>(null);
   
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -74,6 +80,18 @@ const FactCheck: React.FC<FactCheckProps> = ({ settings, onOpenUrl }) => {
         setIsLoading(false);
     }
   }, [text, mediaFile, url, activeTab, settings]);
+  
+  const handleTakeScreenshot = async () => {
+    if (resultRef.current) {
+        try {
+            const canvas = await html2canvas(resultRef.current, { backgroundColor: '#0a0a0a' });
+            setScreenshotImage(canvas.toDataURL('image/png'));
+        } catch (error) {
+            console.error("Error taking screenshot:", error);
+            alert("خطا در گرفتن اسکرین شات.");
+        }
+    }
+  };
   
   const resultCredibilityClasses = getCredibilityClass(result?.overallCredibility);
 
@@ -135,12 +153,14 @@ const FactCheck: React.FC<FactCheckProps> = ({ settings, onOpenUrl }) => {
   }
 
   return (
+    <>
+    {screenshotImage && <ScreenshotModal image={screenshotImage} onClose={() => setScreenshotImage(null)} />}
     <div className="max-w-4xl mx-auto p-6 bg-black/30 backdrop-blur-lg rounded-2xl border border-cyan-400/20 shadow-2xl shadow-cyan-500/10">
       <h2 className="text-xl font-bold mb-4 text-cyan-300 flex items-center gap-3">
         <CheckCircleIcon className="w-6 h-6" />
         فکت چک و ردیابی شایعات
       </h2>
-      <p className="text-sm text-gray-400 mb-6">متن، تصویر، صدا، ویدئو یا لینک مورد نظر خود را برای بررسی اعتبار و **ردیابی منبع اولیه** در شبکه‌های اجتماعی، وارد کنید.</p>
+      <p className="text-sm text-gray-400 mb-6">متن، تصویر، صدا، ویدئو یا لینک مورد نظر خود را برای بررسی اعتبار، **یافتن ویدئو/محتوای اصلی** و **ردیابی منبع اولیه** در شبکه‌های اجتماعی، وارد کنید.</p>
       
       {renderTabs()}
 
@@ -213,7 +233,22 @@ const FactCheck: React.FC<FactCheckProps> = ({ settings, onOpenUrl }) => {
       {error && <p className="mt-4 text-sm text-red-400 bg-red-900/30 p-3 rounded-lg">{error}</p>}
       
       {result && (
-        <div className="mt-8 space-y-6 animate-fade-in">
+        <div ref={resultRef} className="mt-8 space-y-6 animate-fade-in">
+            <div className="flex justify-between items-center">
+                <h3 className="text-xl font-bold text-cyan-300">نتایج بررسی</h3>
+                <div className="flex items-center gap-2">
+                    <button onClick={handleTakeScreenshot} className="text-xs bg-blue-600 hover:bg-blue-500 text-white font-bold py-1 px-2 rounded flex items-center gap-1">
+                        <CameraIcon className="w-4 h-4" /> اسکرین‌شات
+                    </button>
+                    <ExportButton 
+                        elementRef={resultRef} 
+                        data={result} 
+                        title="fact-check-result" 
+                        type="fact-check" 
+                        disabled={!result}
+                    />
+                </div>
+            </div>
             {/* Overall Result */}
             <div className={`p-4 rounded-lg border ${resultCredibilityClasses.border} ${resultCredibilityClasses.bg}`}>
                 <h4 className={`font-bold text-lg mb-2 ${resultCredibilityClasses.text}`}>نتیجه کلی: {result.overallCredibility}</h4>
@@ -289,6 +324,7 @@ const FactCheck: React.FC<FactCheckProps> = ({ settings, onOpenUrl }) => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

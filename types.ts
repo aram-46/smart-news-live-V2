@@ -208,7 +208,7 @@ export interface Source {
 
 export type Sources = Record<SourceCategory, Source[]>;
 
-export type AIInstructionType = 'fact-check' | 'news-search' | 'news-display' | 'news-ticker' | 'statistics-search' | 'science-search' | 'religion-search' | 'video-search' | 'audio-search' | 'book-search' | 'telegram-bot' | 'discord-bot' | 'website-bot' | 'twitter-bot' | 'music-search' | 'dollar-search' | 'video-converter' | 'analyzer-political' | 'analyzer-religious' | 'analyzer-logical' | 'analyzer-philosophical' | 'analyzer-philosophy-of-science' | 'analyzer-historical' | 'analyzer-physics' | 'analyzer-theological' | 'analyzer-fallacy-finder' | 'browser-agent' | 'general-topics' | 'seo-keywords' | 'website-names' | 'domain-names' | 'article-generation' | 'page-creator';
+export type AIInstructionType = 'fact-check' | 'news-search' | 'news-display' | 'news-ticker' | 'statistics-search' | 'science-search' | 'religion-search' | 'video-search' | 'audio-search' | 'book-search' | 'telegram-bot' | 'discord-bot' | 'website-bot' | 'twitter-bot' | 'music-search' | 'dollar-search' | 'video-converter' | 'analyzer-political' | 'analyzer-religious' | 'analyzer-logical' | 'analyzer-philosophical' | 'analyzer-philosophy-of-science' | 'analyzer-historical' | 'analyzer-physics' | 'analyzer-theological' | 'analyzer-fallacy-finder' | 'browser-agent' | 'general-topics' | 'seo-keywords' | 'website-names' | 'domain-names' | 'article-generation' | 'page-creator' | 'video-translate';
 
 export const aiInstructionLabels: Record<AIInstructionType, string> = {
   'fact-check': 'فکت چک و ردیابی شایعه',
@@ -228,6 +228,7 @@ export const aiInstructionLabels: Record<AIInstructionType, string> = {
   'music-search': 'جستجوی موزیک و آهنگ',
   'dollar-search': 'جستجوی قیمت دلار',
   'video-converter': 'تحلیل و تبدیل ویدئو',
+  'video-translate': 'ترجمه و زیرنویس ویدئو',
   'analyzer-political': 'تحلیل سیاسی',
   'analyzer-religious': 'تحلیل دینی',
   'analyzer-logical': 'تحلیل منطقی',

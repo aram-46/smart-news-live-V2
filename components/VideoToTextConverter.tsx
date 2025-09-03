@@ -1,15 +1,16 @@
 
+
 import React, { useState } from 'react';
 import { AppSettings, VideoFactCheckResult, VideoTimestampResult } from '../types';
 import { analyzeVideoFromUrl } from '../services/geminiService';
-import { LinkIcon, CheckCircleIcon, CloseIcon, SearchIcon } from './icons';
+import { LinkIcon, CheckCircleIcon, CloseIcon, SearchIcon, ClipboardIcon, DownloadIcon } from './icons';
 
 interface VideoToTextConverterProps {
     settings: AppSettings;
     onOpenUrl: (url: string) => void;
 }
 
-type AnalysisType = 'summary' | 'analysis' | 'fact-check' | 'timestamp';
+type AnalysisType = 'summary' | 'analysis' | 'fact-check' | 'timestamp' | 'transcribe-translate';
 
 const LoadingSkeleton = () => (
     <div className="p-6 bg-black/20 rounded-2xl border border-cyan-400/10 animate-pulse space-y-4">
@@ -28,6 +29,7 @@ const VideoToTextConverter: React.FC<VideoToTextConverterProps> = ({ settings, o
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [result, setResult] = useState<any | null>(null);
+    const [copyStatus, setCopyStatus] = useState(false);
 
     const handleAnalyze = async () => {
         if (!videoUrl.trim()) {
@@ -44,8 +46,8 @@ const VideoToTextConverter: React.FC<VideoToTextConverterProps> = ({ settings, o
         setResult(null);
 
         try {
-            // FIX: Pass the correct instruction string from settings instead of the whole object.
-            const apiResult = await analyzeVideoFromUrl(videoUrl, analysisType, keywords, settings.aiInstructions['video-converter']);
+            const instructionKey = analysisType === 'transcribe-translate' ? 'video-translate' : 'video-converter';
+            const apiResult = await analyzeVideoFromUrl(videoUrl, analysisType, keywords, settings.aiInstructions[instructionKey]);
             setResult(apiResult);
         } catch (err) {
             console.error("Error during video analysis:", err);
@@ -54,12 +56,31 @@ const VideoToTextConverter: React.FC<VideoToTextConverterProps> = ({ settings, o
             setIsLoading(false);
         }
     };
+
+    const handleCopyText = (text: string) => {
+        navigator.clipboard.writeText(text);
+        setCopyStatus(true);
+        setTimeout(() => setCopyStatus(false), 2000);
+    };
+
+    const handleDownloadText = (text: string) => {
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `video_translation_${Date.now()}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
     
     const analysisOptions: { id: AnalysisType; label: string; description: string }[] = [
         { id: 'summary', label: 'خلاصه', description: 'ارائه یک خلاصه از ویدئو در چند خط.' },
         { id: 'analysis', label: 'تحلیل جامع', description: 'بررسی و تحلیل موضوعات و ادعاهای مطرح شده در ویدئو.' },
         { id: 'fact-check', label: 'راستی‌آزمایی عمیق', description: 'تحلیل منطقی ادعاها و بررسی اعتبار اسناد ارائه شده.' },
         { id: 'timestamp', label: 'یافتن کلمات کلیدی', description: 'پیدا کردن زمان دقیق بیان کلمات یا عبارات در ویدئو.' },
+        { id: 'transcribe-translate', label: 'ترجمه و زیرنویس', description: 'استخراج کامل متن ویدئو و ترجمه آن به فارسی.' },
     ];
     
     const renderResult = () => {
@@ -126,6 +147,31 @@ const VideoToTextConverter: React.FC<VideoToTextConverterProps> = ({ settings, o
                         )}
                     </div>
                  );
+            case 'transcribe-translate':
+                const translatedText = result.translatedText || 'متنی برای ترجمه یافت نشد.';
+                return (
+                    <div className="p-4 rounded-lg bg-gray-800/30 border border-gray-700 space-y-3">
+                        <div className="flex justify-between items-center">
+                            <h3 className="font-semibold text-cyan-200">متن ترجمه شده ویدئو</h3>
+                            <div className="flex gap-2">
+                                <button onClick={() => handleCopyText(translatedText)} className="flex items-center gap-1 text-xs bg-gray-700 hover:bg-gray-600 text-white font-bold py-1 px-2 rounded">
+                                    {copyStatus ? <CheckCircleIcon className="w-4 h-4 text-green-400"/> : <ClipboardIcon className="w-4 h-4"/>}
+                                    <span>{copyStatus ? 'کپی شد' : 'کپی'}</span>
+                                </button>
+                                <button onClick={() => handleDownloadText(translatedText)} className="flex items-center gap-1 text-xs bg-blue-600 hover:bg-blue-500 text-white font-bold py-1 px-2 rounded">
+                                    <DownloadIcon className="w-4 h-4"/>
+                                    <span>دانلود .txt</span>
+                                </button>
+                            </div>
+                        </div>
+                        <textarea
+                            readOnly
+                            value={translatedText}
+                            rows={15}
+                            className="w-full bg-gray-900/50 border border-gray-600/50 rounded-lg text-white p-2.5 text-sm font-sans"
+                        />
+                    </div>
+                );
             default: return null;
         }
     };
@@ -142,7 +188,7 @@ const VideoToTextConverter: React.FC<VideoToTextConverterProps> = ({ settings, o
                     <div className="space-y-2">
                         {analysisOptions.map(opt => (
                             <label key={opt.id} className="flex items-start gap-3 p-3 bg-gray-800/50 rounded-lg cursor-pointer hover:bg-gray-700/50 has-[:checked]:bg-cyan-500/10 has-[:checked]:border-cyan-400 border border-transparent">
-                                <input type="radio" name="analysisType" value={opt.id} checked={analysisType === opt.id} onChange={() => setAnalysisType(opt.id)} className="mt-1 w-4 h-4 text-cyan-600 bg-gray-700 border-gray-600 focus:ring-cyan-500" />
+                                <input type="radio" name="analysisType" value={opt.id} checked={analysisType === opt.id} onChange={() => setAnalysisType(opt.id as AnalysisType)} className="mt-1 w-4 h-4 text-cyan-600 bg-gray-700 border-gray-600 focus:ring-cyan-500" />
                                 <div>
                                     <span className="font-semibold text-gray-200">{opt.label}</span>
                                     <p className="text-xs text-gray-400">{opt.description}</p>

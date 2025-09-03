@@ -914,7 +914,7 @@ export async function fetchGeneralTopicAnalysis(
 
 export async function analyzeVideoFromUrl(
     url: string, 
-    task: 'summary' | 'analysis' | 'fact-check' | 'timestamp', 
+    task: 'summary' | 'analysis' | 'fact-check' | 'timestamp' | 'transcribe-translate', 
     keywords: string, 
     instructions: string
 ): Promise<any> {
@@ -987,6 +987,10 @@ export async function analyzeVideoFromUrl(
                 },
                 required: ["found", "timestamps"]
             };
+            break;
+        case 'transcribe-translate':
+            prompt += "Task: Transcribe the video's audio content and provide a full, fluent translation of it into Persian. The output should be only the translated text.";
+            schema = { type: Type.OBJECT, properties: { translatedText: { type: Type.STRING } } };
             break;
     }
     
