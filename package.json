@@ -1,0 +1,24 @@
+{
+  "name": "smart-news-search",
+  "version": "1.0.0",
+  "description": "An intelligent web tool for real-time searching of national and international news.",
+  "scripts": {
+    "dev": "npx esbuild index.tsx --bundle --outfile=build/index.js --format=esm --jsx=automatic --servedir=. --serve=5001 --define:process.env.API_KEY='\"%API_KEY%\"'",
+    "build": "npx esbuild index.tsx --bundle --outfile=build/index.js --format=esm --jsx=automatic --minify --define:process.env.API_KEY='\"%API_KEY%\"'"
+  },
+  "dependencies": {
+    "@google/genai": "^1.15.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-draggable": "^4.4.6",
+    "xlsx": "^0.18.5",
+    "appwrite": "^15.0.0",
+    "jspdf": "^2.5.1",
+    "html2canvas": "^1.4.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "esbuild": "^0.23.0"
+  }
+}
